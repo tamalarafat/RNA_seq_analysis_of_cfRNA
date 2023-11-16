@@ -1,0 +1,50 @@
+Sender: LSF System <hpcadmin@hpc004.cluster.local>
+Subject: Job 4553224: <srad4> Done
+
+Job <srad4> was submitted from host <hpc007.cluster.local> by user <ytamal2> in cluster <hpc000>.
+Job was executed on host(s) <2*hpc004.cluster.local>, in queue <multicore20>, as user <ytamal2> in cluster <hpc000>.
+</home/ytamal2> was used as the home directory.
+</home/ytamal2/Documents/2023/PhD_projects_Yasir/RNA_seq_analysis_of_cfRNA/02_download_SRA_files/Batch_4> was used as the working directory.
+Started at Wed Nov 15 12:43:39 2023
+Results reported at Wed Nov 15 17:45:54 2023
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+  # Download SRA data
+  for i in $(cat SRA_accession_IDs_b4.txt); do
+    prefetch ${i}
+  done
+
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time   :    637.65 sec.
+    Max Memory :        10 MB
+    Max Swap   :        63 MB
+
+    Max Processes  :         4
+    Max Threads    :         5
+
+The output (if any) follows:
+
+
+
+
+
+
+
+
+
+
+
+
+
+PS:
+
+Read file <srae> for stderr output of this job.
+
