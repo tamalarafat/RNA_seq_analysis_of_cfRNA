@@ -1,0 +1,5 @@
+java -jar trimmomatic-0.39.jar PE -threads 10 -phred33 SRR17333393_1.fastq.gz SRR17333393_2.fastq.gz output_forward_paired.fq.gz output_forward_unpaired.fq.gz output_reverse_paired.fq.gz output_reverse_unpaired.fq.gz ILLUMINACLIP:/netscratch/dep_tsiantis/grp_laurent/tamal/2023/QC_Library/Trimmomatic-0.39/adapters/TruSeq3-PE.fa:2:30:10:2:True LEADING:3 TRAILING:3 MINLEN:36
+
+java -jar /netscratch/dep_tsiantis/grp_laurent/tamal/2023/QC_Library/Trimmomatic-0.39/trimmomatic-0.39.jar PE -threads 10 -phred33 SRR17333393_1.fastq.gz SRR17333393_2.fastq.gz output_forward_paired.fq.gz output_forward_unpaired.fq.gz output_reverse_paired.fq.gz output_reverse_unpaired.fq.gz ILLUMINACLIP:/netscratch/dep_tsiantis/grp_laurent/tamal/2023/QC_Library/Trimmomatic-0.39/adapters/TruSeq3-PE.fa:2:30:10:2:True LEADING:3 TRAILING:3 MINLEN:36
+
+/netscratch/dep_tsiantis/grp_laurent/tamal/2023/QC_Library/Trimmomatic-0.39/adapters

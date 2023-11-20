@@ -1,20 +1,12 @@
 #!/bin/bash
 
-# Specify LSF job parameters
-# -q: queue name
-# -n: number of CPU cores
-# -R: resource requirements
-# -M: memory requirements
-# -o: output file for standard output
-# -e: output file for standard error
-# -J: job name
-# Note: The parameters might vary depending on your cluster configuration
+# Script to submit Trim Galore and Trimmomatic jobs for paired-end FASTQ files
 
 # Path to the directory containing your input FASTQ files
-INPUT_DIR="/netscratch/dep_tsiantis/grp_laurent/tamal/2023/QC_Library/rna_fastqs"
+INPUT_DIR="/netscratch/dep_tsiantis/grp_laurent/tamal/2023/QC_Library/trial"
 
 # Path to the directory where you want to store the trimmed output
-OUTPUT_DIR="/netscratch/dep_tsiantis/grp_laurent/tamal/2023/QC_Library/trimmed_rna_fastqs"
+OUTPUT_DIR="/netscratch/dep_tsiantis/grp_laurent/tamal/2023/QC_Library/trial/qc_fastqs"
 
 BSUB_CMD="bsub -q deptsiantis -n 10 -R 'rusage[mem=30000]' -M 300000 -o trim_output -e trim_error.log -J trim_fastq"
 
@@ -30,8 +22,16 @@ for R1 in "${INPUT_DIR}"/*_1.fastq.gz; do
     R2="${INPUT_DIR}/${SAMPLE}_2.fastq.gz"
 
     # Run Trim Galore for each sample
-    trim_galore --cores 10 --paired --output_dir "${OUTPUT_DIR}" --report_dir "${REPORT_DIR}" "${R1}" "${R2}"
+    # trim_galore --cores 6 --paired --output_dir "${OUTPUT_DIR}" "${R1}" "${R2}"
+
+    # Run Trimmomatic for each sample
+trimmomatic PE -threads 10 -phred33 \
+"${R1}" "${R2}" \
+"${OUTPUT_DIR}/${SAMPLE}_1.paired.fastq.gz" "${OUTPUT_DIR}/${SAMPLE}_1.unpaired.fastq.gz" \
+"${OUTPUT_DIR}/${SAMPLE}_2.paired.fastq.gz" "${OUTPUT_DIR}/${SAMPLE}_2.unpaired.fastq.gz"
 
     echo "Submitted job for ${SAMPLE} for trimming."
 done
 EOF
+
+
