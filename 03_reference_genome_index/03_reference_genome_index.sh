@@ -17,7 +17,9 @@ mkdir -p "/netscratch/dep_tsiantis/grp_laurent/tamal/2023/QC_Library/hg38/refgen
 $BSUB_CMD << EOF
 # Run STAR indexing with multithreading
 STAR --runMode genomeGenerate \
-     --genomeDir /netscratch/dep_tsiantis/grp_laurent/tamal/2023/QC_Library/hg38/refgenome \
+     --genomeDir "/netscratch/dep_tsiantis/grp_laurent/tamal/2023/QC_Library/hg38/refgenome" \
      --genomeFastaFiles hg38.fa \
-     --runThreadN 8  # Adjust this number based on the cpus-per-task value
+     --sjdbGTFfile "/netscratch/dep_tsiantis/grp_laurent/tamal/2023/QC_Library/hg38/annotation_file/gencode.v44.basic.annotation.gtf" \
+     --runThreadN 8
+
 EOF

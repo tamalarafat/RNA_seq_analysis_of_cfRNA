@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Path to the text file containing all sample names
-SAMPLE_FILE="SRA_accession_IDs.txt"
+SAMPLE_FILE="/netscratch/dep_tsiantis/grp_laurent/tamal/2023/QC_Library/QCT/SRA_accession_IDs.txt"
 
 # Path to the directory where you want to store the job scripts
 JOB_SCRIPT_DIR="Job_scripts"
@@ -40,7 +40,13 @@ NUM_BATCHES=$(( ( ${#SAMPLE_NAMES[@]} + BATCH_SIZE - 1 ) / BATCH_SIZE ))
   
       R1="${INPUT_DIR}/${SAMPLE}_1.fastq.gz"
       R2="${INPUT_DIR}/${SAMPLE}_2.fastq.gz"
-  
+      
+      echo "R1=\"${INPUT_DIR}/${SAMPLE}_1.fastq.gz\"" >> "$JOB_SCRIPT"
+      echo "R2=\"${INPUT_DIR}/${SAMPLE}_2.fastq.gz\"" >> "$JOB_SCRIPT"
+    
+      echo "echo "R1: $R1"" >> "$JOB_SCRIPT"
+      echo "echo "R2: $R1"" >> "$JOB_SCRIPT"
+
       # Run Trimmomatic for each sample
       echo "java -jar /netscratch/dep_tsiantis/grp_laurent/tamal/2023/QC_Library/Trimmomatic-0.39/trimmomatic-0.39.jar PE -threads 10 -phred33 \"\${R1}\" \"\${R2}\" \"${OUTPUT_DIR}/${SAMPLE}_1.paired.fastq.gz\" \"${OUTPUT_DIR}/${SAMPLE}_1.unpaired.fastq.gz\" \"${OUTPUT_DIR}/${SAMPLE}_2.paired.fastq.gz\" \"${OUTPUT_DIR}/${SAMPLE}_2.unpaired.fastq.gz\" ILLUMINACLIP:/netscratch/dep_tsiantis/grp_laurent/tamal/2023/QC_Library/Trimmomatic-0.39/adapters/TruSeq3-PE.fa:2:30:10:2:True LEADING:3 TRAILING:3 MINLEN:36" >> "$JOB_SCRIPT"
   done

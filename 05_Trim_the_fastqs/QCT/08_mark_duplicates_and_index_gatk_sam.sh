@@ -9,15 +9,12 @@ mkdir Job_scripts
 JOB_SCRIPT_DIR="Job_scripts"
 
 # Path to the directory containing your input FASTQ files
-INPUT_DIR="/netscratch/dep_tsiantis/grp_laurent/tamal/2023/QC_Library/Marked_duplicated_reads"
+INPUT_DIR="/netscratch/dep_tsiantis/grp_laurent/tamal/2023/QC_Library/aligned_reads"
 
-mkdir "/netscratch/dep_tsiantis/grp_laurent/tamal/2023/QC_Library/htseq_counts"
+mkdir -p "/netscratch/dep_tsiantis/grp_laurent/tamal/2023/QC_Library/Marked_duplicated_reads"
 
 # Path to the directory where you want to store the trimmed output
-OUTPUT_DIR="/netscratch/dep_tsiantis/grp_laurent/tamal/2023/QC_Library/htseq_counts"
-
-# Define the path to the annotation file (GTF format)
-ANNOTATION_FILE="/netscratch/dep_tsiantis/grp_laurent/tamal/2023/QC_Library/hg38/annotation_file/gencode.v44.chr_patch_hapl_scaff.basic.annotation.gtf"
+OUTPUT_DIR="/netscratch/dep_tsiantis/grp_laurent/tamal/2023/QC_Library/Marked_duplicated_reads"
 
 # Number of samples in each batch
 BATCH_SIZE=6
@@ -39,29 +36,27 @@ NUM_BATCHES=$(( ( ${#SAMPLE_NAMES[@]} + BATCH_SIZE - 1 ) / BATCH_SIZE ))
   
   echo "INPUT_DIR=\"$INPUT_DIR\"" >> "$JOB_SCRIPT"
   echo "OUTPUT_DIR=\"$OUTPUT_DIR\"" >> "$JOB_SCRIPT"
-  echo "ANNOTATION_FILE=\"$ANNOTATION_FILE\"" >> "$JOB_SCRIPT"
   
   # Print the sample names for the current batch and Trimmomatic commands
   for ((j = START_INDEX; j <= END_INDEX && j < ${#SAMPLE_NAMES[@]}; j++)); do
     SAMPLE="${SAMPLE_NAMES[j]}"
     echo "echo 'Processing sample: $SAMPLE'" >> "$JOB_SCRIPT"
     
-    I1="${INPUT_DIR}/${SAMPLE}_marked_duplicates.bam"
-    O1="${OUTPUT_DIR}/${SAMPLE}_counts.txt"
+    I1="${INPUT_DIR}/${SAMPLE}_sorted_Aligned.sortedByCoord.out.bam"
+    O1="${OUTPUT_DIR}/${SAMPLE}_marked_duplicates.bam"
+    O2="${OUTPUT_DIR}/${SAMPLE}_marked_dup_metrics.txt"
     
-    echo "I1=\"${INPUT_DIR}/${SAMPLE}_marked_duplicates.bam\"" >> "$JOB_SCRIPT"
-    echo "O1=\"${OUTPUT_DIR}/${SAMPLE}_counts.txt\"" >> "$JOB_SCRIPT"
+    echo "I1=\"${INPUT_DIR}/${SAMPLE}_sorted_Aligned.sortedByCoord.out.bam\"" >> "$JOB_SCRIPT"
+    echo "O1=\"${OUTPUT_DIR}/${SAMPLE}_marked_duplicates.bam\"" >> "$JOB_SCRIPT"
+    echo "O2=\"${OUTPUT_DIR}/${SAMPLE}_marked_dup_metrics.txt\"" >> "$JOB_SCRIPT"
     
-    echo "echo "I1: $I1"" >> "$JOB_SCRIPT"
-    echo "echo "O1: $O1"" >> "$JOB_SCRIPT"
-    echo "echo "ANNOTATION_FILE: $ANNOTATION_FILE"" >> "$JOB_SCRIPT"
-
-
-    # run htseq count to count the reads of the genes per sample
-    echo "htseq-count -f bam -r pos -t exon -i gene_name \"${I1}\" \"\${ANNOTATION_FILE}\" > \"${O1}\"" >> "$JOB_SCRIPT"
+    # Sort the aligned sam files
+    echo "gatk MarkDuplicates -I \"${I1}\" -O \"${O1}\" -M \"${O2}\"" >> "$JOB_SCRIPT"
     
-done
-
+    # Index the sorted marked (duplicated reads) bam files
+    echo "samtools index \"${O1}\"" >> "$JOB_SCRIPT"
+  done
+    
     # Make the job script executable
     chmod +x "$JOB_SCRIPT"
     
@@ -69,3 +64,7 @@ done
     bsub -q deptsiantis -n 10 -R 'rusage[mem=30000]' -M 300000 -o mark_index -e mark_index_error.log -J markdups_and_index "$JOB_SCRIPT"
     
     done
+    
+    
+    
+    
