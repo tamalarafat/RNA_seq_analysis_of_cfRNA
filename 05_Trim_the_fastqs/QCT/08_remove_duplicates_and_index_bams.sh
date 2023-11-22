@@ -14,10 +14,10 @@ INPUT_DIR="/netscratch/dep_tsiantis/grp_laurent/tamal/2023/QC_Library/Marked_dup
 mkdir -p "/netscratch/dep_tsiantis/grp_laurent/tamal/2023/QC_Library/Removed_duplicated_reads"
 
 # Path to the directory where you want to store the trimmed output
-OUTPUT_DIR="/netscratch/dep_tsiantis/grp_laurent/tamal/2023/QC_Library/Marked_duplicated_reads"
+OUTPUT_DIR="/netscratch/dep_tsiantis/grp_laurent/tamal/2023/QC_Library/Removed_duplicated_reads"
 
 # Number of samples in each batch
-BATCH_SIZE=6
+BATCH_SIZE=3
 
 IFS=$'\n' read -d '' -r -a SAMPLE_NAMES < "$SAMPLE_FILE"
 
@@ -42,26 +42,24 @@ NUM_BATCHES=$(( ( ${#SAMPLE_NAMES[@]} + BATCH_SIZE - 1 ) / BATCH_SIZE ))
     SAMPLE="${SAMPLE_NAMES[j]}"
     echo "echo 'Processing sample: $SAMPLE'" >> "$JOB_SCRIPT"
     
-    I1="${INPUT_DIR}/${SAMPLE}_sorted_Aligned.sortedByCoord.out.bam"
-    O1="${OUTPUT_DIR}/${SAMPLE}_marked_duplicates.bam"
-    O2="${OUTPUT_DIR}/${SAMPLE}_marked_dup_metrics.txt"
+    I1="${INPUT_DIR}/${SAMPLE}_marked_duplicates.bam"
+    O1="${OUTPUT_DIR}/${SAMPLE}_dup_removed.bam"
+    O2="${OUTPUT_DIR}/${SAMPLE}_dup_removed.txt"
     
-    echo "I1=\"${INPUT_DIR}/${SAMPLE}_sorted_Aligned.sortedByCoord.out.bam\"" >> "$JOB_SCRIPT"
-    echo "O1=\"${OUTPUT_DIR}/${SAMPLE}_marked_duplicates.bam\"" >> "$JOB_SCRIPT"
-    echo "O2=\"${OUTPUT_DIR}/${SAMPLE}_marked_dup_metrics.txt\"" >> "$JOB_SCRIPT"
+    echo "I1=\"${INPUT_DIR}/${SAMPLE}_marked_duplicates.bam\"" >> "$JOB_SCRIPT"
+    echo "O1=\"${OUTPUT_DIR}/${SAMPLE}_dup_removed.bam\"" >> "$JOB_SCRIPT"
+    echo "O2=\"${OUTPUT_DIR}/${SAMPLE}_dup_removed.txt\"" >> "$JOB_SCRIPT"
     
     # Sort the aligned sam files
-    echo "gatk MarkDuplicates -I \"${I1}\" -O \"${O1}\" -M \"${O2}\"" >> "$JOB_SCRIPT"
+    echo "gatk MarkDuplicates -I \"${I1}\" -O \"${O1}\" -M \"${O2}\" --REMOVE_DUPLICATES true" >> "$JOB_SCRIPT"
     
-    # Index the sorted marked (duplicated reads) bam files
-    echo "samtools index \"${O1}\"" >> "$JOB_SCRIPT"
   done
     
     # Make the job script executable
     chmod +x "$JOB_SCRIPT"
     
     # job submission part
-    bsub -q deptsiantis -n 10 -R 'rusage[mem=30000]' -M 300000 -o mark_index -e mark_index_error.log -J markdups_and_index "$JOB_SCRIPT"
+    bsub -q multicore20 -n 5 -R 'rusage[mem=30000]' -M 300000 -o mark_index -e mark_index_error.log -J markdups_and_index "$JOB_SCRIPT"
     
     done
     
