@@ -9,7 +9,7 @@ scripts_list_2 <- list.files(paste0(project_dir, "scExplorer/Functions/Functions
 sapply(scripts_list_2, source, .GlobalEnv)
 
 # Lets load the metadata
-metainfo <- read.delim(paste0(project_dir, "RNA_seq_analysis_of_cfRNA/Supplementary_data/Data/Accession_number/SraRunTable.txt"), sep = ",", stringsAsFactors = FALSE)
+metainfo <- read.delim("/home/ytamal2/Documents/2023/PhD_projects_Yasir/RNA_seq_analysis_of_cfRNA/Supplementary_data/Data/Accession_number/SraRunTable.txt", sep = ",", stringsAsFactors = FALSE)
 
 metainfo$sampleID = gsub(pattern = ".*_", "", metainfo$Sample.Name)
 
