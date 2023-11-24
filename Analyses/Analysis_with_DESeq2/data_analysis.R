@@ -1,5 +1,5 @@
-library(edgeR)
-library(limma)
+library(DESeq2)
+library(ggplot2)
 
 projects_dir = "~/Documents/2023/PhD_projects_Yasir/"
 
@@ -76,48 +76,78 @@ id_index = grep(pattern = "Geneid", x = colnames(counts))
 name_index = grep(pattern = "gene_name", x = colnames(counts))
 
 # set the rownames of the count table
-counts$Geneid <- str_c(counts$Geneid, counts$gene_name, sep = "_")
+rownames(counts) <- str_c(counts$Geneid, counts$gene_name, sep = "_")
 
 # re-arrane the columns of the data table
 # counts = counts[, c(id_index, name_index, setdiff(seq(1:ncol(counts)), c(id_index, name_index)))]
 # save(counts, file = "RNAseq_table_of_PE.RData")
 
 # Remome the geneID and geneName columns
-counts = counts[, -c(name_index)]
+counts = counts[, -c(id_index, name_index)]
 
 # Confirming samples are in the same order in the gene counts and design table
-summary(colnames(counts[, -1]) == sample_meta_data$Run)
+summary(colnames(counts) == sample_meta_data$Run)
 
-counts = counts[counts$Geneid %in% rownames(de_table), ]
+# Conver the count dataframe into matrix class
+mat = as.matrix(counts)
 
-rownames(counts) <- NULL
-rownames(sample_meta_data) <- NULL
+# Creating a edgeR object, DGEList object, using the counts
+analysis.object <- DGEList(counts = mat, genes = rownames(mat))
 
-dds <- DESeqDataSetFromMatrix(countData = counts, 
-                              colData = sample_meta_data, 
-                              design = ~disease, tidy = TRUE)
+# Add grouping information to the object
+analysis.object$samples$group <- as.factor(sample_meta_data$disease)
 
-dds
+# double check if the groups were assigned correctly
+summary(rownames(analysis.object$samples)[analysis.object$samples$group == "disease"] == disease_ids)
 
-dds <- DESeq(dds)
+# Calculate counts per million - library size normalization
+countsPerMillion <- edgeR::cpm(analysis.object)
 
-res <- results(dds)
-head(results(dds, tidy=TRUE)) #let's look at the results 
+summary(countsPerMillion)
 
-summary(res)
+# Deploy filtering criterias
 
-res <- res[order(res$padj),]
-head(res)
+# Filter 1 - CPM count has to be 0.5 or more
+# Filter 2 - 0.5 CPM count has to be detected in more than 75 samples
+genes_to_keep <- rowSums(countsPerMillion >= 1) >= (75 * 72)/100
 
-plotCounts(dds, gene="ENSG00000100105_PATZ1", intgroup = "disease")
-plotCounts(dds, gene="ENSG00000154760_SLFN13", intgroup="disease")
+keep <- which(rowSums(countsPerMillion >= 1) >= (75 * 72)/100)
 
-# Make a basic volcano plot
-with(res, plot(log2FoldChange, -log10(pvalue), pch=20, main="Volcano plot", xlim=c(-3,3)))
+# Filtering the data
+analysis.object <- analysis.object[genes_to_keep, , keep.lib.sizes = FALSE]
 
-# Add colored points: blue if padj<0.01, red if log2FC>1 and padj<0.05)
-with(subset(res, padj<.1 ), points(log2FoldChange, -log10(pvalue), pch=20, col="blue"))
-with(subset(res, padj<.1 & abs(log2FoldChange)>1), points(log2FoldChange, -log10(pvalue), pch=20, col="red"))
+summary(edgeR::cpm(analysis.object)) 
+
+# Calculating normalisation factors
+analysis.object <- calcNormFactors(analysis.object, method = "TMM")
+
+plotMDS(analysis.object)
+
+# Estimating common dispersion and tagwise dispersion
+groups <- analysis.object$samples$group
+
+design_mat = model.matrix(~groups)
+
+analysis.object <- estimateDisp(analysis.object,
+                               design = model.matrix(~groups))
+
+plotBCV(analysis.object)
+
+# DE test
+fit <- glmFit(analysis.object, design_mat)
+
+# 
+lrt <- glmLRT(fit, coef = 2)
+
+edgeR_result <- topTags(lrt, n = nrow(analysis.object))
+
+de_table = edgeR_result$table
+
+save(de_table, file = "edgeR_Result.RData")
 
 
-save(res, file = "deseq2_Result.RData")
+# Exact tests for differences between experimental conditions
+DGEExact <- exactTest(analysis.object, pair = c("control", "disease"))
+
+# Extracting most differentially expressed genes from exact tests
+save(DGEExact, file = "edgeR_DGEExact.RData")
